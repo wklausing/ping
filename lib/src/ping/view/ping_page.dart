@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:ping/src/ping/cubit/ping_cubit.dart';
 
-import 'ping/view/ping_view.dart';
+import 'ping_view.dart';
 
 class PingApp extends MaterialApp {
   const PingApp({super.key}) : super(home: const PingPage());
