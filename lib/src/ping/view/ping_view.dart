@@ -11,25 +11,7 @@ class PingView extends StatelessWidget {
       body: Column(
         mainAxisAlignment: MainAxisAlignment.end,
         children: [
-          BlocBuilder<PingCubit, PingState>(
-            builder: (context, state) {
-              if (state is InitPingState) {
-                return listOfLearningCardsAnimated(context, state);
-              } else if (state is ActivePingState) {
-                return Center(
-                  child: Text('ActivePingState'),
-                );
-              } else if (state is InactivePingState) {
-                return Center(
-                  child: Text('InactivePingState'),
-                );
-              } else {
-                return Center(
-                  child: Text('Error z45424326'),
-                );
-              }
-            },
-          ),
+          listOfLearningCardsAnimated(context),
           Padding(
             padding: const EdgeInsets.all(8.0),
             child: Row(
@@ -41,7 +23,7 @@ class PingView extends StatelessWidget {
                     padding: const EdgeInsets.only(right: 8.0),
                     child: TextField(
                       decoration: InputDecoration(
-                        labelText: 'Rückseite',
+                        labelText: 'URL',
                         border: OutlineInputBorder(),
                       ),
                     ),
@@ -49,7 +31,7 @@ class PingView extends StatelessWidget {
                 ),
                 ElevatedButton(
                   onPressed: () {
-                    context.read<PingCubit>().addPing();
+                    // context.read<PingCubit>().addPing();
                   },
                   child: Text('Ping'),
                 ),
@@ -62,28 +44,38 @@ class PingView extends StatelessWidget {
   }
 }
 
-Widget listOfLearningCardsAnimated(BuildContext context, InitPingState state) {
-  print(state.pings.length.toString());
-  return Expanded(
-    child: AnimatedList(
-      reverse: true,
-      key: state.animatedListKey,
-      initialItemCount: state.pings.length,
-      padding: EdgeInsets.all(4),
-      itemBuilder: (context, index, animation) {
-        Ping ping = state.pings[index];
-        return SizeTransition(
-          sizeFactor: animation,
-          child: FractionallySizedBox(
-            widthFactor: 0.99,
-            child: Card(
-              shape: Border(),
-              margin: EdgeInsets.all(4.0),
-              child: Text(ping.latency.toString()),
-            ),
+Widget listOfLearningCardsAnimated(BuildContext context) {
+  return BlocBuilder<PingCubit, PingState>(
+    builder: (context, state) {
+      if (state is InitPingState) {
+        return Expanded(
+          child: AnimatedList(
+            reverse: true,
+            key: state.animatedListKey,
+            initialItemCount: state.pings.length,
+            padding: EdgeInsets.all(4),
+            itemBuilder: (context, index, animation) {
+              Ping ping = state.pings[index];
+              return SizeTransition(
+                sizeFactor: animation,
+                child: FractionallySizedBox(
+                  widthFactor: 0.99,
+                  child: Card(
+                    margin: EdgeInsets.all(4.0),
+                    child: Text(ping.status.toString()),
+                  ),
+                ),
+              );
+            },
           ),
         );
-      },
-    ),
+      } else if (state is ActivePingState) {
+        return Center(child: Text('ActivePingState'));
+      } else if (state is InactivePingState) {
+        return Center(child: Text('InactivePingState'));
+      } else {
+        return Center(child: Text('Error z45424326'));
+      }
+    },
   );
 }
