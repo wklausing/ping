@@ -7,6 +7,10 @@ class PingView extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    // var foo = context.read<PingCubit>.lastURL;
+    // context.read<PingCubit>().initPingStream(myController.text);
+    TextEditingController myController = TextEditingController();
+
     return Scaffold(
       body: Column(
         mainAxisAlignment: MainAxisAlignment.end,
@@ -22,6 +26,7 @@ class PingView extends StatelessWidget {
                   child: Padding(
                     padding: const EdgeInsets.only(right: 8.0),
                     child: TextField(
+                      controller: myController,
                       decoration: InputDecoration(
                         labelText: 'URL',
                         border: OutlineInputBorder(),
@@ -29,12 +34,36 @@ class PingView extends StatelessWidget {
                     ),
                   ),
                 ),
-                ElevatedButton(
-                  onPressed: () {
-                    // context.read<PingCubit>().addPing();
-                  },
-                  child: Text('Ping'),
-                ),
+                BlocBuilder<PingCubit, PingState>(builder: (context, state) {
+                  if (state is ActivePingState) {
+                    return ElevatedButton(
+                      onPressed: () {
+                        context.read<PingCubit>().pausePingStream();
+                      },
+                      child: Text('Pause'),
+                    );
+                  } else if (state is InactivePingState) {
+                    return ElevatedButton(
+                      onPressed: () {
+                        context
+                            .read<PingCubit>()
+                            .initPingStream(myController.text);
+                      },
+                      child: Text('Ping'),
+                    );
+                  } else if (state == Null) {
+                    return Text('Loading');
+                  } else {
+                    return ElevatedButton(
+                      onPressed: () {
+                        context
+                            .read<PingCubit>()
+                            .initPingStream(myController.text);
+                      },
+                      child: Text('Ping'),
+                    );
+                  }
+                })
               ],
             ),
           ),
@@ -47,7 +76,7 @@ class PingView extends StatelessWidget {
 Widget listOfLearningCardsAnimated(BuildContext context) {
   return BlocBuilder<PingCubit, PingState>(
     builder: (context, state) {
-      if (state is InitPingState) {
+      if (state is ActivePingState) {
         return Expanded(
           child: AnimatedList(
             reverse: true,
@@ -69,8 +98,8 @@ Widget listOfLearningCardsAnimated(BuildContext context) {
             },
           ),
         );
-      } else if (state is ActivePingState) {
-        return Center(child: Text('ActivePingState'));
+      } else if (state is InitPingState) {
+        return Center(child: Text('InitPingState'));
       } else if (state is InactivePingState) {
         return Center(child: Text('InactivePingState'));
       } else {

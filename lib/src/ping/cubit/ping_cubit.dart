@@ -9,46 +9,58 @@ class PingCubit extends Cubit<PingState> {
   final GlobalKey<AnimatedListState> animatedListKey =
       GlobalKey<AnimatedListState>();
   PingRepository pingRepo = PingRepository();
+  StreamSubscription? streamSubscription;
+  String lastURL = 'www.google.de';
 
   PingCubit() : super(InitPingState(pings: [], animatedListKey: null)) {
-    initPingStream('www.google.de');
+    initPingStream(lastURL);
   }
 
-  void initPingStream(String url) {
+  void initPingStream(String? url) {
+    url ??= lastURL;
+
+    if (streamSubscription != null) {
+      streamSubscription!.cancel();
+      streamSubscription = null;
+    }
+
     Stream streamFoo = pingRepo.initPingStream(url);
-    streamFoo.listen((event) {
+    streamSubscription = streamFoo.listen((event) {
       print(event.toString());
       pings.insert(0, Ping(event.toString()));
       animatedListKey.currentState?.insertItem(0);
-      emit(InitPingState(pings: pings, animatedListKey: animatedListKey));
+      emit(ActivePingState(pings: pings, animatedListKey: animatedListKey));
     });
+  }
+
+  void pausePingStream() {
+    if (streamSubscription != null) {
+      streamSubscription!.pause();
+    }
+    emit(InactivePingState(pings: pings, animatedListKey: animatedListKey));
   }
 }
 
 abstract class PingState {
-  List<Ping> pings = [];
+  List<Ping> pings;
+  final GlobalKey<AnimatedListState>? animatedListKey;
 
-  PingState(this.pings);
+  PingState({
+    required this.pings,
+    this.animatedListKey,
+  });
 }
 
 class InitPingState extends PingState {
-  final GlobalKey<AnimatedListState>? _animatedListKey;
-
-  InitPingState({
-    required List<Ping> pings,
-    GlobalKey<AnimatedListState>? animatedListKey,
-  })  : _animatedListKey = animatedListKey,
-        super(pings);
-
-  get animatedListKey => _animatedListKey;
+  InitPingState({required super.pings, super.animatedListKey});
 }
 
 class ActivePingState extends PingState {
-  ActivePingState(super.pings);
+  ActivePingState({required super.pings, super.animatedListKey});
 }
 
 class InactivePingState extends PingState {
-  InactivePingState(super.pings);
+  InactivePingState({required super.pings, super.animatedListKey});
 }
 
 class Ping {
